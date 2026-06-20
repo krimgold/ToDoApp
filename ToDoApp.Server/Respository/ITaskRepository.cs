@@ -8,5 +8,6 @@
 		Task DeleteTaskAsync(Guid taskId, CancellationToken token = default);
 		Task<bool> ExistsAsync(Guid taskId, CancellationToken cancellationToken = default);
 		Task UpdateTaskAsync(ToDoTask task, CancellationToken token = default);
+		Task<IEnumerable<ToDoTask>> GetTasksByName(string name, CancellationToken token = default);
 	}
 }

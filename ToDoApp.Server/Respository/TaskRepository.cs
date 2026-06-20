@@ -26,5 +26,7 @@
 		public async Task<IEnumerable<ToDoTask>> GetAllTasksAsync(CancellationToken token = default) => tasks;
 
 		public async Task<bool> ExistsAsync(Guid taskId, CancellationToken cancellationToken = default) => tasks.Exists(t => t.Id == taskId);
+
+		public async Task<IEnumerable<ToDoTask>> GetTasksByName(string name, CancellationToken token = default) => tasks.Where(t => t.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 	}
 }

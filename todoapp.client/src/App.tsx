@@ -21,7 +21,8 @@ function App() {
     // avoid briefly showing protected UI before token validation.
     const [token, setToken] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [edits, setEdits] = useState<Record<string, { status: string; priority: number }>>({});
+    const [edits, setEdits] = useState<Record<string, { name: string; status: string; priority: number }>>({});
+    const [editErrors, setEditErrors] = useState<Record<string, string | null>>({});
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState<string | null>(null);
@@ -50,20 +51,25 @@ function App() {
                         <div className="task-actions">
                             {editingId === todo.id
                                 ? <div className="edit-controls">
+                                    <input className={`input ${editErrors[todo.id] ? 'error' : ''}`} value={edits[todo.id]?.name ?? todo.name}
+                                        onChange={e => setEdits({...edits, [todo.id]: { ...(edits[todo.id] ?? { name: todo.name, status: todo.status, priority: todo.priority }), name: e.target.value, status: edits[todo.id]?.status ?? todo.status, priority: edits[todo.id]?.priority ?? todo.priority }})}
+                                        placeholder="Task name" />
+                                    {editErrors[todo.id] && <div className="error-text">{editErrors[todo.id]}</div>}
+
                                     <select value={edits[todo.id]?.status ?? todo.status}
-                                        onChange={e => setEdits({...edits, [todo.id]: { ...(edits[todo.id] ?? { status: todo.status, priority: todo.priority }), status: e.target.value, priority: edits[todo.id]?.priority ?? todo.priority }})}>
+                                        onChange={e => setEdits({...edits, [todo.id]: { ...(edits[todo.id] ?? { name: todo.name, status: todo.status, priority: todo.priority }), status: e.target.value, priority: edits[todo.id]?.priority ?? todo.priority }})}>
                                         <option>NotStarted</option>
                                         <option>InProgress</option>
                                         <option>Completed</option>
                                     </select>
                                     <input type="number" value={edits[todo.id]?.priority ?? todo.priority}
-                                        onChange={e => setEdits({...edits, [todo.id]: { ...(edits[todo.id] ?? { status: todo.status, priority: todo.priority }), priority: Number(e.target.value) }})}
+                                        onChange={e => setEdits({...edits, [todo.id]: { ...(edits[todo.id] ?? { name: todo.name, status: todo.status, priority: todo.priority }), priority: Number(e.target.value) }})}
                                         className="input" style={{width:64}} />
                                     <button onClick={() => updateTodo(todo.id)} className="button" >Save</button>
-                                    <button onClick={() => { setEditingId(null); }} className="button secondary">Cancel</button>
+                                    <button onClick={() => { setEditingId(null); setEditErrors({...editErrors, [todo.id]: null}); }} className="button secondary">Cancel</button>
                                 </div>
                                 : <>
-                                    <button onClick={() => { setEditingId(todo.id); setEdits({...edits, [todo.id]: { status: todo.status, priority: todo.priority }}); }} className="button">Edit</button>
+                                    <button onClick={() => { setEditingId(todo.id); setEdits({...edits, [todo.id]: { name: todo.name, status: todo.status, priority: todo.priority }}); }} className="button">Edit</button>
                                     <button
                                         onClick={() => deleteTodo(todo.id)}
                                         className="button delete"
@@ -149,7 +155,14 @@ function App() {
 
     async function addTodo(e: React.FormEvent) {
         e.preventDefault();
-        if (!newTitle) return;
+        const title = newTitle?.trim();
+        if (!title) return;
+
+        // client-side duplicate name check (case-insensitive) to give immediate feedback
+        if (todos && todos.some(t => t.name.trim().localeCompare(title, undefined, { sensitivity: 'accent' }) === 0 || t.name.trim().toLowerCase() === title.toLowerCase())) {
+            setCreateError(`Task with name ${title} already exists`);
+            return;
+        }
         try {
             const response = await fetch(api('/api/tasks'), {
                 method: 'POST',
@@ -160,10 +173,29 @@ function App() {
                 setNewTitle('');
                 setNewStatus('NotStarted');
                 setNewPriority(1);
+                setCreateError(null);
                 populateTodos();
             } else {
                 console.error('Failed to add todo', response.status);
-                if (response.status === 401) logout();
+                if (response.status === 401) {
+                    logout();
+                } else if (response.status === 400) {
+                    // show server-provided validation message (e.g. duplicate name)
+                    try {
+                        const text = await response.text();
+                        setCreateError(text || 'Cannot create task');
+                    } catch {
+                        setCreateError('Cannot create task');
+                    }
+                } else {
+                    // other errors
+                    try {
+                        const text = await response.text();
+                        alert(text || 'Failed to add todo');
+                    } catch {
+                        alert('Failed to add todo');
+                    }
+                }
             }
         } catch (err) {
             console.error('Error adding todo', err);
@@ -210,19 +242,36 @@ function App() {
         const current = todos?.find(t => t.id === id);
         if (!current) return;
 
+        const newName = edit.name?.trim() ?? current.name;
+
+        // client-side duplicate name check (exclude the task being edited)
+        if (todos && todos.some(t => t.id !== id && t.name.trim().toLowerCase() === newName.toLowerCase())) {
+            setEditErrors({...editErrors, [id]: `Task with name ${newName} already exists`});
+            return;
+        }
+
         try {
             const response = await fetch(api(`/api/tasks/${id}`), {
                 method: 'PUT',
                 headers: authHeaders(),
-                body: JSON.stringify({ Id: id, Name: current.name, Status: edit.status, Priority: edit.priority })
+                body: JSON.stringify({ Id: id, Name: newName, Status: edit.status, Priority: edit.priority })
             });
             if (response.ok) {
                 setEditingId(null);
+                setEditErrors({...editErrors, [id]: null});
                 // refresh list
                 populateTodos();
             } else {
                 console.error('Failed to update', response.status);
                 if (response.status === 401) logout();
+                else if (response.status === 400) {
+                    try {
+                        const text = await response.text();
+                        setEditErrors({...editErrors, [id]: text || 'Cannot update task'});
+                    } catch {
+                        setEditErrors({...editErrors, [id]: 'Cannot update task'});
+                    }
+                }
             }
         } catch (err) {
             console.error('Error updating todo', err);

@@ -67,10 +67,17 @@ namespace ToDoApp.Server.Controllers
 		[HttpPost]
 		[Consumes(MediaTypeNames.Application.Json)]
 		[ProducesResponseType(StatusCodes.Status201Created)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		public async Task<ActionResult> CreateTask([FromBody] ToDoTaskRequest task, CancellationToken token = default)
 		{
+			if ((await _taskService.GetTasksByName(task.Name, token)).Any())
+			{
+				_logger.LogWarning($"Task with name {task.Name} already exists");
+				return BadRequest($"Task with name {task.Name} already exists");
+			}
+
 			try
 			{
 				var taskId = await _taskService.AddTaskAsync(task.MapToDto(), token);

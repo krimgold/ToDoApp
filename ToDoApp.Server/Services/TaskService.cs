@@ -35,5 +35,7 @@ namespace ToDoApp.Server.Services
 			=> (await _taskRepository.GetAllTasksAsync(token)).Select(t => t.MapToDto()).OrderBy(t => t.Priority);
 
 		public async Task<bool> ExistsAsync(Guid taskId, CancellationToken token = default) => await _taskRepository.ExistsAsync(taskId, token);
+
+		public async Task<IEnumerable<ToDoTaskDto>> GetTasksByName(string name, CancellationToken token = default) => (await _taskRepository.GetTasksByName(name, token)).Select(t => t.MapToDto());
 	}
 }

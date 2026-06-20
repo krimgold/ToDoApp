@@ -30,6 +30,24 @@ namespace ToDoApp.Server.Tests
 		}
 
 		[Fact]
+		public async Task GetTasksByName_Returns_MappedDtos()
+		{
+			var name = "Duplicate";
+			var repoTasks = new[] {
+				new ToDoTask { Id = Guid.NewGuid(), Name = name, Status = ToDoTaskStatus.NotStarted, Priority = 2 }
+			};
+			var repository = new Mock<ITaskRepository>();
+			repository.Setup(r => r.GetTasksByName(name, It.IsAny<CancellationToken>())).ReturnsAsync(repoTasks);
+			
+			var service = new TaskService(repository.Object);
+
+			var result = (await service.GetTasksByName(name)).ToList();
+			result.Should().HaveCount(1);
+			result[0].Name.Should().Be(name);
+			result[0].Priority.Should().Be(2);
+		}
+
+		[Fact]
 		public async Task GetTaskAsync_ReturnsMappedDto_WhenRepositoryHasTask()
 		{
 			var id = Guid.NewGuid();

@@ -39,6 +39,33 @@ namespace ToDoApp.Server.Tests
 		}
 
 		[Fact]
+		public async Task Create_Returns_BadRequest_WhenNameAlreadyExists()
+		{
+			var name = "Duplicate";
+			var existingTask = new ToDoTaskDto { Id = Guid.NewGuid(), Name = name, Status = ToDoTaskStatus.NotStarted, Priority = 1 };
+			
+			var service = new Mock<ITaskService>();
+			service.Setup(s => s.GetTasksByName(name, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { existingTask });
+			
+			var logger = new Mock<Microsoft.Extensions.Logging.ILogger<TaskController>>();
+			
+			var controller = new TaskController(service.Object, logger.Object);
+
+			var newTask = new ToDoTaskRequest { Name = name, Priority = 1, Status = ToDoTaskStatus.NotStarted };
+			
+			var result = await controller.CreateTask(newTask, CancellationToken.None);
+			var response = Assert.IsType<BadRequestObjectResult>(result);
+			response.Value.Should().Be($"Task with name {name} already exists");
+
+			logger.Verify(l => l.Log(
+				Microsoft.Extensions.Logging.LogLevel.Warning,
+				It.IsAny<Microsoft.Extensions.Logging.EventId>(),
+				It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Task with name {name} already exists")),
+				It.IsAny<Exception>(),
+				It.IsAny<Func<It.IsAnyType, Exception, string>>()), Times.Once);
+		}
+
+		[Fact]
 		public async Task GetById_ReturnsOk_WhenExists()
 		{
 			var id = Guid.NewGuid();
