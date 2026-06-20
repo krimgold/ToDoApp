@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "ES2020",
+		"jsx": "react-jsx",
+		"esModuleInterop": true,
+		"allowJs": true,
+		"skipLibCheck": true,
+		"moduleResolution": "node",
+		"types": ["jest", "node", "jsdom"]
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"]
+}

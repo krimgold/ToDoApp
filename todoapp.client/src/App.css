@@ -1,0 +1,123 @@
+﻿#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+th, td {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.app-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(23, 23, 23, 0.08);
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto 2rem auto;
+  text-align: left;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-header h1 {
+  font-size: 48px;
+  line-height: 1;
+  margin: 0 0 8px 0;
+}
+
+.create-form, .login-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* add extra space between header/title and the create form */
+.create-form {
+  margin-top: 24px;
+}
+
+.input, input[type="text"], input[type="password"], input[type="number"], select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d0d7de;
+  font-size: 14px;
+}
+
+.input.error {
+  border-color: #d23f31;
+  box-shadow: 0 0 0 3px rgba(210,63,49,0.06);
+}
+
+.error-text {
+  color: #d23f31;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.button {
+  background: #0f62fe;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.button.secondary {
+  background: #e7edf8;
+  color: #0f62fe;
+}
+
+/* visibly disabled button styles */
+.button[disabled], .button.secondary[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(10%);
+}
+
+.button[disabled] {
+  /* keep contrast for primary when disabled */
+  background: #0f62fe;
+}
+
+/* delete button: red when enabled, grey when disabled */
+.button.delete {
+  background: #d23f31; /* red */
+  color: #ffffff;
+  border: none;
+}
+
+.button.delete[disabled] {
+  background: #f0f2f5; /* light grey */
+  color: #6b7280; /* muted text */
+  opacity: 1; /* keep explicit color contrast */
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.task-list { list-style: none; padding: 0; margin: 0; }
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid #f0f2f5;
+}
+.task-info { display:flex; flex-direction:column; }
+.task-meta { color: #6b7280; font-size: 13px; }
+.task-actions { display:flex; gap:8px; align-items:center; }
+
+.edit-controls { display:flex; gap:8px; align-items:center; }
+
+.small { font-size: 13px; color:#6b7280 }
